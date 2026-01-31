@@ -445,23 +445,23 @@ const i18n = {
 };
 
 const defaultSchools = [
-    { id: 1, name: 'RISD', nameCn: '罗德岛设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 93+', tuition: '$58,000', deadline: '2027-01-10', applying: false, portfolioReq: '12-20件｜需含2-3件绘画｜鼓励展示过程草图', notes: '' },
-    { id: 2, name: 'SAIC', nameCn: '芝加哥艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 82+', tuition: '$55,000', deadline: '2027-01-15', applying: false, portfolioReq: '10-15件｜无固定格式｜鼓励实验性作品', notes: '' },
-    { id: 3, name: 'Parsons', nameCn: '帕森斯设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 92+', tuition: '$56,000', deadline: '2027-01-15', applying: false, portfolioReq: '8-12件｜需完成Parsons Challenge命题创作', notes: '' },
-    { id: 4, name: 'Pratt', nameCn: '普瑞特艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 79+', tuition: '$57,000', deadline: '2027-01-05', applying: false, portfolioReq: '12-20件｜需3-5件观察性绘画', notes: '' },
-    { id: 5, name: 'SVA', nameCn: '纽约视觉艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$48,000', deadline: '2027-01-15', applying: false, portfolioReq: '15-20件｜根据专业有具体要求', notes: '' },
-    { id: 6, name: 'CalArts', nameCn: '加州艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$56,000', deadline: '2027-01-05', applying: false, portfolioReq: '无固定数量｜看重创意和个人风格', notes: '' },
-    { id: 7, name: 'CCA', nameCn: '加州艺术学院(旧金山)', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$54,000', deadline: '2027-02-01', applying: false, portfolioReq: '10-15件｜鼓励展示创作过程', notes: '' },
-    { id: 8, name: 'MICA', nameCn: '马里兰艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$52,000', deadline: '2027-01-15', applying: false, portfolioReq: '12-20件｜需多样性｜含绘画基础', notes: '' },
-    { id: 9, name: 'SCAD', nameCn: '萨凡纳艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 85+', tuition: '$40,000', deadline: 'Rolling', applying: false, portfolioReq: '10-20件｜接受数字/传统媒介混合', notes: '' },
-    { id: 10, name: 'ArtCenter', nameCn: '艺术中心设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$50,000', deadline: '2027-01-15', applying: false, portfolioReq: '15-20件｜要求较高专业性', notes: '' },
-    { id: 11, name: 'RCA', nameCn: '皇家艺术学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£35,000', deadline: '2027-01-25', applying: false, portfolioReq: '不限数量重质量｜研究生为主｜需研究性项目', notes: '' },
-    { id: 12, name: 'UAL', nameCn: '伦敦艺术大学', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.0+', tuition: '£30,000', deadline: '2027-01-15', applying: false, portfolioReq: '15-30件｜需展示创作过程和调研', notes: '' },
-    { id: 13, name: 'Goldsmiths', nameCn: '金史密斯学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£22,000', deadline: '2027-01-15', applying: false, portfolioReq: '10-20件｜偏概念性和当代艺术', notes: '' },
-    { id: 14, name: 'ArtEZ', nameCn: 'ArtEZ艺术学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€10,000', deadline: '2027-05-01', applying: false, portfolioReq: '15-20件｜需面试展示', notes: '' },
-    { id: 15, name: 'Design Academy Eindhoven', nameCn: '埃因霍温设计学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€11,000', deadline: '2027-03-01', applying: false, portfolioReq: '自由｜非常看重概念和思辨设计', notes: '' },
-    { id: 16, name: 'Aalto University', nameCn: '阿尔托大学', country: 'Finland', flag: '🇫🇮', langReq: 'IELTS 6.5+', tuition: '€15,000', deadline: '2027-01-10', applying: false, portfolioReq: '按要求提交｜有在线任务需完成', notes: '' },
-    { id: 17, name: 'ECAL', nameCn: '洛桑艺术设计学院', country: 'Switzerland', flag: '🇨🇭', langReq: 'IELTS 6.5+', tuition: 'CHF 1,000', deadline: '2027-02-15', applying: false, portfolioReq: '10-15件｜平面设计需强调排版和字体', notes: '' }
+    { id: 1, name: 'RISD', nameCn: '罗德岛设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 93+', tuition: '$58,000', deadline: '2027-01-10', applying: false, notes: '' },
+    { id: 2, name: 'SAIC', nameCn: '芝加哥艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 82+', tuition: '$55,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 3, name: 'Parsons', nameCn: '帕森斯设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 92+', tuition: '$56,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 4, name: 'Pratt', nameCn: '普瑞特艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 79+', tuition: '$57,000', deadline: '2027-01-05', applying: false, notes: '' },
+    { id: 5, name: 'SVA', nameCn: '纽约视觉艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$48,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 6, name: 'CalArts', nameCn: '加州艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$56,000', deadline: '2027-01-05', applying: false, notes: '' },
+    { id: 7, name: 'CCA', nameCn: '加州艺术学院(旧金山)', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$54,000', deadline: '2027-02-01', applying: false, notes: '' },
+    { id: 8, name: 'MICA', nameCn: '马里兰艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$52,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 9, name: 'SCAD', nameCn: '萨凡纳艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 85+', tuition: '$40,000', deadline: 'Rolling', applying: false, notes: '' },
+    { id: 10, name: 'ArtCenter', nameCn: '艺术中心设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$50,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 11, name: 'RCA', nameCn: '皇家艺术学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£35,000', deadline: '2027-01-25', applying: false, notes: '' },
+    { id: 12, name: 'UAL', nameCn: '伦敦艺术大学', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.0+', tuition: '£30,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 13, name: 'Goldsmiths', nameCn: '金史密斯学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£22,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 14, name: 'ArtEZ', nameCn: 'ArtEZ艺术学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€10,000', deadline: '2027-05-01', applying: false, notes: '' },
+    { id: 15, name: 'Design Academy Eindhoven', nameCn: '埃因霍温设计学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€11,000', deadline: '2027-03-01', applying: false, notes: '' },
+    { id: 16, name: 'Aalto University', nameCn: '阿尔托大学', country: 'Finland', flag: '🇫🇮', langReq: 'IELTS 6.5+', tuition: '€15,000', deadline: '2027-01-10', applying: false, notes: '' },
+    { id: 17, name: 'ECAL', nameCn: '洛桑艺术设计学院', country: 'Switzerland', flag: '🇨🇭', langReq: 'IELTS 6.5+', tuition: 'CHF 1,000', deadline: '2027-02-15', applying: false, notes: '' }
 ];
 
 const defaultData = {
