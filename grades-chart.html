@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annie IB成绩走向图 | Grade Trends</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">📊 Annie IB 成绩走向图</h1>
+        <p class="text-gray-500 mb-8">Grade Trends - DP1 Q1 → S1</p>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-green-600">2</div>
+                <div class="text-sm text-green-700">科目提升 ⬆️</div>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-blue-600">3</div>
+                <div class="text-sm text-blue-700">科目持平 ➡️</div>
+            </div>
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                <div class="text-2xl font-bold text-gray-600">28→30</div>
+                <div class="text-sm text-gray-700">总分变化</div>
+            </div>
+        </div>
+
+        <!-- Main Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <canvas id="gradesChart" height="300"></canvas>
+        </div>
+
+        <!-- Subject Details -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-semibold mb-4">📋 科目详情</h2>
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2">科目</th>
+                        <th class="text-center py-2">Q1</th>
+                        <th class="text-center py-2">S1</th>
+                        <th class="text-center py-2">变化</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="py-3">Chinese A Literature SL</td>
+                        <td class="text-center">5</td>
+                        <td class="text-center font-bold">6</td>
+                        <td class="text-center text-green-600">⬆️ +1</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-3">English B HL</td>
+                        <td class="text-center">4</td>
+                        <td class="text-center">4</td>
+                        <td class="text-center text-gray-400">➡️ 0</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-3">Economics SL</td>
+                        <td class="text-center">4</td>
+                        <td class="text-center font-bold">5</td>
+                        <td class="text-center text-green-600">⬆️ +1</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-3">Design Technology HL</td>
+                        <td class="text-center">5</td>
+                        <td class="text-center">5</td>
+                        <td class="text-center text-gray-400">➡️ 0</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-3">Mathematics AA SL</td>
+                        <td class="text-center">4</td>
+                        <td class="text-center">4</td>
+                        <td class="text-center text-gray-400">➡️ 0</td>
+                    </tr>
+                    <tr class="border-b bg-purple-50">
+                        <td class="py-3 font-medium">Visual Arts HL ⭐</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center font-bold text-purple-600">6</td>
+                        <td class="text-center text-purple-600">核心科目</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3">TOK</td>
+                        <td class="text-center">-</td>
+                        <td class="text-center">D</td>
+                        <td class="text-center text-orange-500">需提升</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Analysis -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h2 class="text-lg font-semibold text-blue-800 mb-3">💡 分析与建议</h2>
+            <ul class="space-y-2 text-blue-700">
+                <li>✅ <strong>Chinese A</strong> 进步明显，继续保持</li>
+                <li>✅ <strong>Economics</strong> 提升1分，论点构建有改善</li>
+                <li>⚠️ <strong>English B</strong> 仍需重点提升，影响托福和申请</li>
+                <li>⚠️ <strong>Math</strong> 受病假影响，S2需及时复习补上</li>
+                <li>🌟 <strong>Visual Arts</strong> 6分是优势，争取S2拿7</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('gradesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Q1 (Oct 2025)', 'S1 (Jan 2026)'],
+                datasets: [
+                    {
+                        label: 'Chinese A',
+                        data: [5, 6],
+                        borderColor: '#ef4444',
+                        backgroundColor: '#fef2f2',
+                        tension: 0.3,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'English B',
+                        data: [4, 4],
+                        borderColor: '#3b82f6',
+                        backgroundColor: '#eff6ff',
+                        tension: 0.3,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Economics',
+                        data: [4, 5],
+                        borderColor: '#22c55e',
+                        backgroundColor: '#f0fdf4',
+                        tension: 0.3,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Design Tech',
+                        data: [5, 5],
+                        borderColor: '#f59e0b',
+                        backgroundColor: '#fffbeb',
+                        tension: 0.3,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Math AA',
+                        data: [4, 4],
+                        borderColor: '#8b5cf6',
+                        backgroundColor: '#faf5ff',
+                        tension: 0.3,
+                        pointRadius: 6
+                    },
+                    {
+                        label: 'Visual Arts',
+                        data: [null, 6],
+                        borderColor: '#ec4899',
+                        backgroundColor: '#fdf2f8',
+                        tension: 0.3,
+                        pointRadius: 8,
+                        borderWidth: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'IB 各科成绩走向',
+                        font: { size: 16 }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 1,
+                        max: 7,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'IB Grade (1-7)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB Art Application Tracker | IB艺术留学追踪系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .progress-bar { transition: width 0.5s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div id="app">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl">🎨</span>
+                    <span class="ml-2 font-bold text-gray-900">{{ t('appTitle') }}</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button @click="currentView = 'dashboard'" :class="navClass('dashboard')">{{ t('nav.dashboard') }}</button>
+                    <button @click="currentView = 'schools'" :class="navClass('schools')">{{ t('nav.schools') }}</button>
+                    <button @click="currentView = 'portfolio'" :class="navClass('portfolio')">{{ t('nav.portfolio') }}</button>
+                    <button @click="currentView = 'scores'" :class="navClass('scores')">{{ t('nav.scores') }}</button>
+                    <button @click="currentView = 'timeline'" :class="navClass('timeline')">{{ t('nav.timeline') }}</button>
+                    <button @click="currentView = 'settings'" :class="navClass('settings')">⚙️</button>
+                    <button @click="toggleLang" class="px-2 py-1 text-sm bg-gray-100 rounded">{{ lang === 'zh' ? 'EN' : '中' }}</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Dashboard -->
+        <div v-if="currentView === 'dashboard'">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ t('dashboard.title') }}</h1>
+            
+            <!-- Countdown -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white mb-8">
+                <div class="text-lg opacity-90">{{ t('dashboard.countdown') }}</div>
+                <div class="text-5xl font-bold mt-2">{{ daysUntilDeadline }} {{ t('dashboard.days') }}</div>
+                <div class="text-sm opacity-75 mt-2">{{ t('dashboard.targetDate') }}: 2026-12-01</div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <div class="text-3xl font-bold text-blue-600">{{ data.toefl.current || '--' }}</div>
+                    <div class="text-gray-500 text-sm">{{ t('dashboard.toefl') }}</div>
+                    <div class="text-xs text-gray-400">{{ t('dashboard.target') }}: {{ data.toefl.target }}</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <div class="text-3xl font-bold text-green-600">{{ portfolioCount }}/{{ portfolioTarget }}</div>
+                    <div class="text-gray-500 text-sm">{{ t('dashboard.portfolio') }}</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <div class="text-3xl font-bold text-purple-600">{{ data.schools.filter(s => s.applying).length }}</div>
+                    <div class="text-gray-500 text-sm">{{ t('dashboard.targetSchools') }}</div>
+                </div>
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <div class="text-3xl font-bold text-orange-600">{{ casTotal }}</div>
+                    <div class="text-gray-500 text-sm">{{ t('dashboard.casHours') }}</div>
+                </div>
+            </div>
+
+            <!-- Upcoming Tasks -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4">📋 {{ t('dashboard.upcoming') }}</h2>
+                <div v-if="upcomingTasks.length === 0" class="text-gray-400 text-center py-4">{{ t('dashboard.noTasks') }}</div>
+                <div v-for="task in upcomingTasks" :key="task.id" class="flex items-center justify-between py-3 border-b last:border-0">
+                    <div class="flex items-center">
+                        <input type="checkbox" :checked="task.done" @change="toggleTask(task)" class="mr-3 h-5 w-5">
+                        <span :class="task.done ? 'line-through text-gray-400' : ''">{{ task.title }}</span>
+                    </div>
+                    <span :class="getDueDateClass(task.dueDate)">{{ task.dueDate }}</span>
+                </div>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="font-semibold mb-4">{{ t('dashboard.overallProgress') }}</h3>
+                    <div v-for="(item, key) in progressItems" :key="key" class="mb-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>{{ item.label }}</span>
+                            <span>{{ item.value }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full progress-bar" :style="{width: item.value + '%'}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="font-semibold mb-4">{{ t('dashboard.quickAdd') }}</h3>
+                    <input v-model="newTask" @keyup.enter="addTask" :placeholder="t('dashboard.addTaskPlaceholder')" class="w-full p-3 border rounded-lg mb-3">
+                    <input v-model="newTaskDate" type="date" class="w-full p-3 border rounded-lg mb-3">
+                    <button @click="addTask" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">{{ t('dashboard.addTask') }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schools View -->
+        <div v-if="currentView === 'schools'">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">{{ t('schools.title') }}</h1>
+                <select v-model="schoolFilter" class="p-2 border rounded-lg">
+                    <option value="all">{{ t('schools.all') }}</option>
+                    <option value="usa">{{ t('schools.usa') }}</option>
+                    <option value="europe">{{ t('schools.europe') }}</option>
+                    <option value="applying">{{ t('schools.applying') }}</option>
+                </select>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="school in filteredSchools" :key="school.id" class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg">{{ school.name }}</h3>
+                                <p class="text-gray-500 text-sm">{{ school.nameCn }}</p>
+                            </div>
+                            <span class="text-2xl">{{ school.country === 'USA' ? '🇺🇸' : school.flag }}</span>
+                        </div>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ t('schools.langReq') }}</span>
+                                <span class="font-medium">{{ school.langReq }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ t('schools.tuition') }}</span>
+                                <span class="font-medium">{{ school.tuition }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ t('schools.deadline') }}</span>
+                                <span class="font-medium">{{ school.deadline || '--' }}</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center justify-between">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="school.applying" @change="saveData" class="mr-2">
+                                <span class="text-sm">{{ t('schools.applyThis') }}</span>
+                            </label>
+                            <button @click="editSchool(school)" class="text-blue-600 text-sm">{{ t('schools.edit') }}</button>
+                        </div>
+                    </div>
+                    <div v-if="school.applying" class="bg-green-50 px-5 py-2 text-green-700 text-sm">
+                        ✓ {{ t('schools.inList') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio View -->
+        <div v-if="currentView === 'portfolio'">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">{{ t('portfolio.title') }}</h1>
+                <button @click="showAddPortfolio = true" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ {{ t('portfolio.add') }}</button>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600">{{ t('portfolio.progress') }}: {{ portfolioCount }}/{{ portfolioTarget }}</span>
+                    <span class="text-sm text-gray-400">{{ t('portfolio.recommended') }}: 12-15 {{ t('portfolio.pieces') }}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-green-500 h-3 rounded-full progress-bar" :style="{width: (portfolioCount/portfolioTarget*100) + '%'}"></div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="work in data.portfolio" :key="work.id" class="bg-white rounded-xl shadow-sm p-5">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold">{{ work.title }}</h3>
+                        <span :class="getStatusClass(work.status)">{{ t('status.' + work.status) }}</span>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p><strong>{{ t('portfolio.type') }}:</strong> {{ work.type }}</p>
+                        <p><strong>{{ t('portfolio.medium') }}:</strong> {{ work.medium }}</p>
+                        <p v-if="work.feedback"><strong>{{ t('portfolio.feedback') }}:</strong> {{ work.feedback }}</p>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-xs text-gray-400 mb-1">{{ t('portfolio.completion') }}: {{ work.progress }}%</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" :style="{width: work.progress + '%'}"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex space-x-2">
+                        <button @click="editPortfolio(work)" class="text-blue-600 text-sm">{{ t('common.edit') }}</button>
+                        <button @click="deletePortfolio(work.id)" class="text-red-600 text-sm">{{ t('common.delete') }}</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Portfolio Modal -->
+            <div v-if="showAddPortfolio" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+                    <h3 class="text-xl font-bold mb-4">{{ t('portfolio.addNew') }}</h3>
+                    <input v-model="newPortfolio.title" :placeholder="t('portfolio.titlePlaceholder')" class="w-full p-3 border rounded-lg mb-3">
+                    <select v-model="newPortfolio.type" class="w-full p-3 border rounded-lg mb-3">
+                        <option value="">{{ t('portfolio.selectType') }}</option>
+                        <option value="Graphic Design">Graphic Design / 平面设计</option>
+                        <option value="Illustration">Illustration / 插画</option>
+                        <option value="Photography">Photography / 摄影</option>
+                        <option value="3D/Sculpture">3D/Sculpture / 3D/雕塑</option>
+                        <option value="Motion Graphics">Motion Graphics / 动态图形</option>
+                        <option value="Mixed Media">Mixed Media / 混合媒介</option>
+                    </select>
+                    <input v-model="newPortfolio.medium" :placeholder="t('portfolio.mediumPlaceholder')" class="w-full p-3 border rounded-lg mb-3">
+                    <div class="flex space-x-3">
+                        <button @click="showAddPortfolio = false" class="flex-1 py-2 border rounded-lg">{{ t('common.cancel') }}</button>
+                        <button @click="addPortfolio" class="flex-1 py-2 bg-blue-600 text-white rounded-lg">{{ t('common.save') }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scores View -->
+        <div v-if="currentView === 'scores'">
+            <h1 class="text-3xl font-bold mb-6">{{ t('scores.title') }}</h1>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- TOEFL -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">🌐 TOEFL</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-gray-500">{{ t('scores.current') }}</label>
+                            <input v-model.number="data.toefl.current" @change="saveData" type="number" class="w-full p-3 border rounded-lg mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">{{ t('scores.target') }}</label>
+                            <input v-model.number="data.toefl.target" @change="saveData" type="number" class="w-full p-3 border rounded-lg mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">{{ t('scores.nextExam') }}</label>
+                            <input v-model="data.toefl.nextExam" @change="saveData" type="date" class="w-full p-3 border rounded-lg mt-1">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-sm font-medium mb-2">{{ t('scores.history') }}</h4>
+                        <div v-for="(score, idx) in data.toefl.history" :key="idx" class="flex justify-between text-sm py-1 border-b">
+                            <span>{{ score.date }}</span>
+                            <span class="font-medium">{{ score.score }}</span>
+                        </div>
+                        <div class="mt-2 flex space-x-2">
+                            <input v-model="newToeflDate" type="date" class="flex-1 p-2 border rounded text-sm">
+                            <input v-model.number="newToeflScore" type="number" placeholder="Score" class="w-20 p-2 border rounded text-sm">
+                            <button @click="addToeflScore" class="px-3 py-2 bg-blue-600 text-white rounded text-sm">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IB Scores -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">📚 IB {{ t('scores.predicted') }}</h2>
+                    <div class="space-y-3">
+                        <div v-for="subject in data.ib.subjects" :key="subject.name" class="flex items-center justify-between">
+                            <span class="text-sm">{{ subject.name }}</span>
+                            <input v-model.number="subject.predicted" @change="saveData" type="number" min="1" max="7" class="w-16 p-2 border rounded text-center">
+                        </div>
+                        <div class="border-t pt-3 flex justify-between font-semibold">
+                            <span>{{ t('scores.total') }}</span>
+                            <span>{{ ibTotal }}/45</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-500">EE {{ t('scores.topic') }}</label>
+                            <input v-model="data.ib.ee.topic" @change="saveData" class="w-full p-2 border rounded-lg mt-1 text-sm">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500">TOK {{ t('scores.status') }}</label>
+                            <select v-model="data.ib.tok.status" @change="saveData" class="w-full p-2 border rounded-lg mt-1 text-sm">
+                                <option value="not_started">Not Started</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CAS -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">🎭 CAS</h2>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">{{ data.cas.creativity }}</div>
+                            <div class="text-xs text-gray-500">Creativity</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">{{ data.cas.activity }}</div>
+                            <div class="text-xs text-gray-500">Activity</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ data.cas.service }}</div>
+                            <div class="text-xs text-gray-500">Service</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <input v-model.number="data.cas.creativity" @change="saveData" type="number" placeholder="Creativity hours" class="w-full p-2 border rounded text-sm">
+                        <input v-model.number="data.cas.activity" @change="saveData" type="number" placeholder="Activity hours" class="w-full p-2 border rounded text-sm">
+                        <input v-model.number="data.cas.service" @change="saveData" type="number" placeholder="Service hours" class="w-full p-2 border rounded text-sm">
+                    </div>
+                </div>
+
+                <!-- Awards -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">🏆 {{ t('scores.awards') }}</h2>
+                    <div v-for="award in data.awards" :key="award.id" class="flex justify-between items-center py-2 border-b">
+                        <div>
+                            <div class="font-medium">{{ award.name }}</div>
+                            <div class="text-sm text-gray-500">{{ award.date }}</div>
+                        </div>
+                        <button @click="deleteAward(award.id)" class="text-red-500 text-sm">×</button>
+                    </div>
+                    <div class="mt-3 space-y-2">
+                        <input v-model="newAward.name" placeholder="Award name" class="w-full p-2 border rounded text-sm">
+                        <div class="flex space-x-2">
+                            <input v-model="newAward.date" type="date" class="flex-1 p-2 border rounded text-sm">
+                            <button @click="addAward" class="px-4 py-2 bg-blue-600 text-white rounded text-sm">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline View -->
+        <div v-if="currentView === 'timeline'">
+            <h1 class="text-3xl font-bold mb-6">{{ t('timeline.title') }}</h1>
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="space-y-4">
+                    <div v-for="(event, idx) in sortedTimeline" :key="idx" class="flex items-start">
+                        <div class="w-24 text-sm text-gray-500 flex-shrink-0">{{ event.date }}</div>
+                        <div class="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" :class="event.done ? 'bg-green-500' : isPast(event.date) ? 'bg-red-500' : 'bg-blue-500'"></div>
+                        <div class="ml-4 flex-1">
+                            <div class="font-medium" :class="event.done ? 'line-through text-gray-400' : ''">{{ event.title }}</div>
+                            <div class="text-sm text-gray-500">{{ event.category }}</div>
+                        </div>
+                        <input type="checkbox" v-model="event.done" @change="saveData" class="ml-2">
+                    </div>
+                </div>
+                <div class="mt-6 border-t pt-4">
+                    <h3 class="font-semibold mb-3">{{ t('timeline.addEvent') }}</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <input v-model="newEvent.date" type="date" class="p-2 border rounded">
+                        <input v-model="newEvent.title" :placeholder="t('timeline.eventTitle')" class="p-2 border rounded">
+                        <select v-model="newEvent.category" class="p-2 border rounded">
+                            <option value="TOEFL">TOEFL</option>
+                            <option value="Portfolio">Portfolio</option>
+                            <option value="Application">Application</option>
+                            <option value="Interview">Interview</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button @click="addEvent" class="mt-3 w-full py-2 bg-blue-600 text-white rounded-lg">{{ t('timeline.add') }}</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings View -->
+        <div v-if="currentView === 'settings'">
+            <h1 class="text-3xl font-bold mb-6">{{ t('settings.title') }}</h1>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">{{ t('settings.language') }}</h2>
+                    <select v-model="lang" @change="saveSettings" class="w-full p-3 border rounded-lg">
+                        <option value="zh">中文</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">{{ t('settings.data') }}</h2>
+                    <button @click="exportData" class="w-full py-3 bg-green-600 text-white rounded-lg mb-3">{{ t('settings.export') }}</button>
+                    <input type="file" @change="importData" accept=".json" class="hidden" ref="fileInput">
+                    <button @click="$refs.fileInput.click()" class="w-full py-3 bg-blue-600 text-white rounded-lg mb-3">{{ t('settings.import') }}</button>
+                    <button @click="resetData" class="w-full py-3 bg-red-600 text-white rounded-lg">{{ t('settings.reset') }}</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">{{ t('settings.portfolioTarget') }}</h2>
+                    <input v-model.number="portfolioTarget" @change="saveSettings" type="number" class="w-full p-3 border rounded-lg">
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-semibold mb-4">{{ t('settings.deadline') }}</h2>
+                    <input v-model="targetDeadline" @change="saveSettings" type="date" class="w-full p-3 border rounded-lg">
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted } = Vue;
+
+const i18n = {
+    zh: {
+        appTitle: 'IB艺术留学追踪系统',
+        nav: { dashboard: '仪表盘', schools: '学校', portfolio: '作品集', scores: '成绩', timeline: '时间线' },
+        dashboard: {
+            title: '申请进度总览', countdown: '距离申请截止', days: '天', targetDate: '目标日期',
+            toefl: 'TOEFL成绩', portfolio: '作品集', targetSchools: '目标学校', casHours: 'CAS小时',
+            target: '目标', upcoming: '待办事项', noTasks: '暂无待办事项', overallProgress: '整体进度',
+            quickAdd: '快速添加待办', addTaskPlaceholder: '输入任务...', addTask: '添加任务'
+        },
+        schools: { title: '目标学校', all: '全部', usa: '美国', europe: '欧洲', applying: '申请中',
+            langReq: '语言要求', tuition: '学费/年', deadline: '截止日期', applyThis: '申请此校', edit: '编辑', inList: '已加入申请列表' },
+        portfolio: { title: '作品集管理', add: '添加作品', progress: '进度', recommended: '建议', pieces: '件',
+            type: '类型', medium: '媒介/技法', feedback: '导师反馈', completion: '完成度',
+            addNew: '添加新作品', titlePlaceholder: '作品标题', selectType: '选择类型', mediumPlaceholder: '使用的媒介/软件/技法' },
+        scores: { title: '成绩追踪', current: '当前分数', target: '目标分数', nextExam: '下次考试', history: '历史记录',
+            predicted: '预估分', total: '总分', topic: '主题', status: '状态', awards: '竞赛/奖项' },
+        timeline: { title: '时间线', addEvent: '添加事件', eventTitle: '事件标题', add: '添加' },
+        settings: { title: '设置', language: '语言', data: '数据管理', export: '导出数据', import: '导入数据',
+            reset: '重置数据', portfolioTarget: '作品集目标数量', deadline: '申请截止日期' },
+        status: { not_started: '未开始', in_progress: '进行中', completed: '已完成', draft: '草稿' },
+        common: { edit: '编辑', delete: '删除', cancel: '取消', save: '保存' }
+    },
+    en: {
+        appTitle: 'IB Art Application Tracker',
+        nav: { dashboard: 'Dashboard', schools: 'Schools', portfolio: 'Portfolio', scores: 'Scores', timeline: 'Timeline' },
+        dashboard: {
+            title: 'Application Overview', countdown: 'Days Until Deadline', days: 'days', targetDate: 'Target Date',
+            toefl: 'TOEFL Score', portfolio: 'Portfolio', targetSchools: 'Target Schools', casHours: 'CAS Hours',
+            target: 'Target', upcoming: 'Upcoming Tasks', noTasks: 'No tasks', overallProgress: 'Overall Progress',
+            quickAdd: 'Quick Add Task', addTaskPlaceholder: 'Enter task...', addTask: 'Add Task'
+        },
+        schools: { title: 'Target Schools', all: 'All', usa: 'USA', europe: 'Europe', applying: 'Applying',
+            langReq: 'Language Req', tuition: 'Tuition/Year', deadline: 'Deadline', applyThis: 'Apply to this school', edit: 'Edit', inList: 'In application list' },
+        portfolio: { title: 'Portfolio Management', add: 'Add Work', progress: 'Progress', recommended: 'Recommended', pieces: 'pieces',
+            type: 'Type', medium: 'Medium/Technique', feedback: 'Mentor Feedback', completion: 'Completion',
+            addNew: 'Add New Work', titlePlaceholder: 'Work title', selectType: 'Select type', mediumPlaceholder: 'Medium/Software/Technique used' },
+        scores: { title: 'Score Tracking', current: 'Current Score', target: 'Target Score', nextExam: 'Next Exam', history: 'History',
+            predicted: 'Predicted', total: 'Total', topic: 'Topic', status: 'Status', awards: 'Awards' },
+        timeline: { title: 'Timeline', addEvent: 'Add Event', eventTitle: 'Event title', add: 'Add' },
+        settings: { title: 'Settings', language: 'Language', data: 'Data Management', export: 'Export Data', import: 'Import Data',
+            reset: 'Reset Data', portfolioTarget: 'Portfolio Target Count', deadline: 'Application Deadline' },
+        status: { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed', draft: 'Draft' },
+        common: { edit: 'Edit', delete: 'Delete', cancel: 'Cancel', save: 'Save' }
+    }
+};
+
+const defaultSchools = [
+    { id: 1, name: 'RISD', nameCn: '罗德岛设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 93+', tuition: '$58,000', deadline: '2027-01-10', applying: false, notes: '' },
+    { id: 2, name: 'SAIC', nameCn: '芝加哥艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 82+', tuition: '$55,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 3, name: 'Parsons', nameCn: '帕森斯设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 92+', tuition: '$56,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 4, name: 'Pratt', nameCn: '普瑞特艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 79+', tuition: '$57,000', deadline: '2027-01-05', applying: false, notes: '' },
+    { id: 5, name: 'SVA', nameCn: '纽约视觉艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$48,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 6, name: 'CalArts', nameCn: '加州艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$56,000', deadline: '2027-01-05', applying: false, notes: '' },
+    { id: 7, name: 'CCA', nameCn: '加州艺术学院(旧金山)', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$54,000', deadline: '2027-02-01', applying: false, notes: '' },
+    { id: 8, name: 'MICA', nameCn: '马里兰艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$52,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 9, name: 'SCAD', nameCn: '萨凡纳艺术学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 85+', tuition: '$40,000', deadline: 'Rolling', applying: false, notes: '' },
+    { id: 10, name: 'ArtCenter', nameCn: '艺术中心设计学院', country: 'USA', flag: '🇺🇸', langReq: 'TOEFL 80+', tuition: '$50,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 11, name: 'RCA', nameCn: '皇家艺术学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£35,000', deadline: '2027-01-25', applying: false, notes: '' },
+    { id: 12, name: 'UAL', nameCn: '伦敦艺术大学', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.0+', tuition: '£30,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 13, name: 'Goldsmiths', nameCn: '金史密斯学院', country: 'UK', flag: '🇬🇧', langReq: 'IELTS 6.5+', tuition: '£22,000', deadline: '2027-01-15', applying: false, notes: '' },
+    { id: 14, name: 'ArtEZ', nameCn: 'ArtEZ艺术学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€10,000', deadline: '2027-05-01', applying: false, notes: '' },
+    { id: 15, name: 'Design Academy Eindhoven', nameCn: '埃因霍温设计学院', country: 'Netherlands', flag: '🇳🇱', langReq: 'IELTS 6.0+', tuition: '€11,000', deadline: '2027-03-01', applying: false, notes: '' },
+    { id: 16, name: 'Aalto University', nameCn: '阿尔托大学', country: 'Finland', flag: '🇫🇮', langReq: 'IELTS 6.5+', tuition: '€15,000', deadline: '2027-01-10', applying: false, notes: '' },
+    { id: 17, name: 'ECAL', nameCn: '洛桑艺术设计学院', country: 'Switzerland', flag: '🇨🇭', langReq: 'IELTS 6.5+', tuition: 'CHF 1,000', deadline: '2027-02-15', applying: false, notes: '' }
+];
+
+const defaultData = {
+    toefl: { current: null, target: 100, nextExam: '', history: [] },
+    ib: {
+        subjects: [
+            { name: 'Visual Arts HL', predicted: null },
+            { name: 'English A HL', predicted: null },
+            { name: 'Chinese B SL', predicted: null },
+            { name: 'Math AA SL', predicted: null },
+            { name: 'History HL', predicted: null },
+            { name: 'Biology SL', predicted: null }
+        ],
+        ee: { topic: '', status: 'not_started' },
+        tok: { status: 'not_started' }
+    },
+    cas: { creativity: 0, activity: 0, service: 0, projects: [] },
+    portfolio: [],
+    schools: defaultSchools,
+    tasks: [],
+    timeline: [
+        { date: '2026-03-01', title: 'TOEFL First Attempt', category: 'TOEFL', done: false },
+        { date: '2026-06-01', title: 'Complete 3 Portfolio Pieces', category: 'Portfolio', done: false },
+        { date: '2026-08-01', title: 'Summer Program Applications', category: 'Application', done: false },
+        { date: '2026-10-01', title: 'Finalize School List', category: 'Application', done: false },
+        { date: '2026-11-01', title: 'Complete Portfolio (12 pieces)', category: 'Portfolio', done: false },
+        { date: '2026-12-01', title: 'Early Applications Due', category: 'Application', done: false }
+    ],
+    awards: [],
+    essays: { ps: '', artistStatement: '' },
+    recommendations: []
+};
+
+createApp({
+    setup() {
+        const lang = ref(localStorage.getItem('ib-tracker-lang') || 'zh');
+        const currentView = ref('dashboard');
+        const data = ref(JSON.parse(localStorage.getItem('ib-tracker-data')) || JSON.parse(JSON.stringify(defaultData)));
+        const schoolFilter = ref('all');
+        const portfolioTarget = ref(parseInt(localStorage.getItem('ib-tracker-portfolio-target')) || 12);
+        const targetDeadline = ref(localStorage.getItem('ib-tracker-deadline') || '2026-12-01');
+        
+        const showAddPortfolio = ref(false);
+        const newPortfolio = ref({ title: '', type: '', medium: '', progress: 0, status: 'not_started' });
+        const newTask = ref('');
+        const newTaskDate = ref('');
+        const newToeflDate = ref('');
+        const newToeflScore = ref(null);
+        const newAward = ref({ name: '', date: '' });
+        const newEvent = ref({ date: '', title: '', category: 'Other' });
+
+        const t = (key) => {
+            const keys = key.split('.');
+            let result = i18n[lang.value];
+            for (const k of keys) result = result?.[k];
+            return result || key;
+        };
+
+        const toggleLang = () => { lang.value = lang.value === 'zh' ? 'en' : 'zh'; saveSettings(); };
+        const navClass = (view) => currentView.value === view ? 'px-3 py-2 text-blue-600 font-medium' : 'px-3 py-2 text-gray-600 hover:text-gray-900';
+        
+        const saveData = () => localStorage.setItem('ib-tracker-data', JSON.stringify(data.value));
+        const saveSettings = () => {
+            localStorage.setItem('ib-tracker-lang', lang.value);
+            localStorage.setItem('ib-tracker-portfolio-target', portfolioTarget.value);
+            localStorage.setItem('ib-tracker-deadline', targetDeadline.value);
+        };
+
+        const daysUntilDeadline = computed(() => {
+            const diff = new Date(targetDeadline.value) - new Date();
+            return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+        });
+
+        const portfolioCount = computed(() => data.value.portfolio.filter(p => p.status === 'completed').length);
+        const casTotal = computed(() => data.value.cas.creativity + data.value.cas.activity + data.value.cas.service);
+        const ibTotal = computed(() => data.value.ib.subjects.reduce((sum, s) => sum + (s.predicted || 0), 0));
+        
+        const filteredSchools = computed(() => {
+            let schools = data.value.schools;
+            if (schoolFilter.value === 'usa') schools = schools.filter(s => s.country === 'USA');
+            else if (schoolFilter.value === 'europe') schools = schools.filter(s => s.country !== 'USA');
+            else if (schoolFilter.value === 'applying') schools = schools.filter(s => s.applying);
+            return schools;
+        });
+
+        const upcomingTasks = computed(() => data.value.tasks.slice().sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).slice(0, 5));
+        const sortedTimeline = computed(() => data.value.timeline.slice().sort((a, b) => new Date(a.date) - new Date(b.date)));
+
+        const progressItems = computed(() => ({
+            toefl: { label: 'TOEFL', value: Math.min(100, Math.round((data.value.toefl.current || 0) / data.value.toefl.target * 100)) },
+            portfolio: { label: lang.value === 'zh' ? '作品集' : 'Portfolio', value: Math.round(portfolioCount.value / portfolioTarget.value * 100) },
+            cas: { label: 'CAS', value: Math.min(100, Math.round(casTotal.value / 150 * 100)) }
+        }));
+
+        const getDueDateClass = (date) => {
+            const diff = (new Date(date) - new Date()) / (1000 * 60 * 60 * 24);
+            if (diff < 0) return 'text-red-600 font-medium';
+            if (diff < 7) return 'text-orange-600 font-medium';
+            return 'text-gray-500';
+        };
+        const getStatusClass = (status) => {
+            const classes = { completed: 'bg-green-100 text-green-800', in_progress: 'bg-blue-100 text-blue-800', not_started: 'bg-gray-100 text-gray-800', draft: 'bg-yellow-100 text-yellow-800' };
+            return `px-2 py-1 rounded text-xs ${classes[status] || classes.not_started}`;
+        };
+        const isPast = (date) => new Date(date) < new Date();
+
+        const addTask = () => {
+            if (!newTask.value) return;
+            data.value.tasks.push({ id: Date.now(), title: newTask.value, dueDate: newTaskDate.value || '', done: false });
+            newTask.value = ''; newTaskDate.value = ''; saveData();
+        };
+        const toggleTask = (task) => { task.done = !task.done; saveData(); };
+        
+        const addPortfolio = () => {
+            if (!newPortfolio.value.title) return;
+            data.value.portfolio.push({ ...newPortfolio.value, id: Date.now() });
+            newPortfolio.value = { title: '', type: '', medium: '', progress: 0, status: 'not_started' };
+            showAddPortfolio.value = false; saveData();
+        };
+        const editPortfolio = (work) => { /* TODO: implement edit modal */ };
+        const deletePortfolio = (id) => { data.value.portfolio = data.value.portfolio.filter(p => p.id !== id); saveData(); };
+
+        const addToeflScore = () => {
+            if (!newToeflDate.value || !newToeflScore.value) return;
+            data.value.toefl.history.push({ date: newToeflDate.value, score: newToeflScore.value });
+            data.value.toefl.current = newToeflScore.value;
+            newToeflDate.value = ''; newToeflScore.value = null; saveData();
+        };
+
+        const addAward = () => {
+            if (!newAward.value.name) return;
+            data.value.awards.push({ ...newAward.value, id: Date.now() });
+            newAward.value = { name: '', date: '' }; saveData();
+        };
+        const deleteAward = (id) => { data.value.awards = data.value.awards.filter(a => a.id !== id); saveData(); };
+
+        const addEvent = () => {
+            if (!newEvent.value.title || !newEvent.value.date) return;
+            data.value.timeline.push({ ...newEvent.value, done: false });
+            newEvent.value = { date: '', title: '', category: 'Other' }; saveData();
+        };
+
+        const editSchool = (school) => { /* TODO: implement edit modal */ };
+
+        const exportData = () => {
+            const blob = new Blob([JSON.stringify(data.value, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `ib-tracker-backup-${new Date().toISOString().split('T')[0]}.json`; a.click();
+        };
+        const importData = (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => { data.value = JSON.parse(ev.target.result); saveData(); };
+            reader.readAsText(file);
+        };
+        const resetData = () => {
+            if (confirm(lang.value === 'zh' ? '确定要重置所有数据吗？' : 'Are you sure you want to reset all data?')) {
+                data.value = JSON.parse(JSON.stringify(defaultData)); saveData();
+            }
+        };
+
+        return {
+            lang, currentView, data, schoolFilter, portfolioTarget, targetDeadline,
+            showAddPortfolio, newPortfolio, newTask, newTaskDate, newToeflDate, newToeflScore, newAward, newEvent,
+            t, toggleLang, navClass, saveData, saveSettings,
+            daysUntilDeadline, portfolioCount, casTotal, ibTotal, filteredSchools, upcomingTasks, sortedTimeline, progressItems,
+            getDueDateClass, getStatusClass, isPast,
+            addTask, toggleTask, addPortfolio, editPortfolio, deletePortfolio,
+            addToeflScore, addAward, deleteAward, addEvent, editSchool,
+            exportData, importData, resetData
+        };
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
